@@ -198,6 +198,7 @@ public class GSpreadsheetsStorage {
      * @return vector with all entries in the data storage
      */
     public List<StudentGradesEntry> readAll(){
+        Vector<StudentGradesEntry> entryList = new Vector<StudentGradesEntry>();
         try{
             SpreadsheetService service = new SpreadsheetService("Tigus Project Storage");
             service.setUserCredentials(this.username, this.password);
@@ -207,34 +208,43 @@ public class GSpreadsheetsStorage {
             List<SpreadsheetEntry> spreadsheets = feed.getEntries();
             for (int i = 0; i < spreadsheets.size(); i++) {
                 SpreadsheetEntry entry = spreadsheets.get(i);
-                System.out.println("\t" + entry.getTitle().getPlainText());
+                //System.out.println("\t" + entry.getTitle().getPlainText());
                   
                 List<WorksheetEntry> worksheets = entry.getWorksheets();
                 for (int j = 0; j < worksheets.size(); j++) {
                     WorksheetEntry worksheet = worksheets.get(j);
                     //String title = worksheet.getTitle().getPlainText();
-                    int rowCount = worksheet.getRowCount();
+                    //int rowCount = worksheet.getRowCount();
                 
                     URL listFeedUrl = worksheet.getListFeedUrl();
                     ListFeed f = service.getFeed(listFeedUrl, ListFeed.class);
-                    Vector<StudentGradesEntry> entryList = new Vector<StudentGradesEntry>(rowCount);
+                    
                     for (ListEntry e : f.getEntries()) {
                         //System.out.println(e.getTitle().getPlainText());
                         StudentGradesEntry sge = new StudentGradesEntry();
                     
-                        for (String tag : e.getCustomElements().getTags()) {
-                            System.out.println("  " + e.getCustomElements().getValue(tag) + "");
-                        }
-                  
+                        Iterator<String> it = e.getCustomElements().getTags().iterator();
+
+                        sge.id = e.getCustomElements().getValue(it.next());
+                        sge.testSerialNumber = e.getCustomElements().getValue(it.next());
+                        sge.studentName = e.getCustomElements().getValue(it.next());
+                        sge.studentGroup = e.getCustomElements().getValue(it.next());
+                        
+                        sge.mapQuestionPosition = null;
+                        sge.mapQuestionGrade = null;        
+                        sge.mapQuestionAnswer = null;  
+                        sge.total = null;
+                        
                         entryList.add(sge);
-                    }              
+                    }      
+                    
                 }
             }
         }
         catch(Exception e){
             System.out.println("Exception caught!");
         }
-        return null;
+        return entryList;
     }
 
     /**
@@ -245,6 +255,52 @@ public class GSpreadsheetsStorage {
      * @return entry that was read or null if entry does not exist
      */
     public StudentGradesEntry read(String entryId){
+        try{
+            SpreadsheetService service = new SpreadsheetService("Tigus Project Storage");
+            service.setUserCredentials(this.username, this.password);
+            
+            URL metafeedUrl = new URL("http://spreadsheets.google.com/feeds/spreadsheets/private/full");
+            SpreadsheetFeed feed = service.getFeed(metafeedUrl, SpreadsheetFeed.class);
+            List<SpreadsheetEntry> spreadsheets = feed.getEntries();
+            for (int i = 0; i < spreadsheets.size(); i++) {
+                SpreadsheetEntry entry = spreadsheets.get(i);
+                //System.out.println("\t" + entry.getTitle().getPlainText());
+                  
+                List<WorksheetEntry> worksheets = entry.getWorksheets();
+                for (int j = 0; j < worksheets.size(); j++) {
+                    WorksheetEntry worksheet = worksheets.get(j);
+                    //String title = worksheet.getTitle().getPlainText();
+                
+                    URL listFeedUrl = worksheet.getListFeedUrl();
+                    ListFeed f = service.getFeed(listFeedUrl, ListFeed.class);
+                    
+                    for (ListEntry e : f.getEntries()) {
+                        //System.out.println(e.getTitle().getPlainText());
+                        StudentGradesEntry sge = new StudentGradesEntry();
+
+                        Iterator<String> it = e.getCustomElements().getTags().iterator();
+
+                        sge.id = e.getCustomElements().getValue(it.next());
+                        if( entryId.equals(sge.id)){
+                            sge.testSerialNumber = e.getCustomElements().getValue(it.next());
+                            sge.studentName = e.getCustomElements().getValue(it.next());
+                            sge.studentGroup = e.getCustomElements().getValue(it.next());
+                            
+                            sge.mapQuestionPosition = null;
+                            sge.mapQuestionGrade = null;        
+                            sge.mapQuestionAnswer = null;  
+                            sge.total = null;
+                            
+                            return sge;
+                        }
+                  
+                    }      
+                }
+            }
+        }
+        catch(Exception e){
+            System.out.println("Exception caught!");
+        }
         return null;
     }
 
@@ -342,8 +398,16 @@ public class GSpreadsheetsStorage {
         sge.total = 50.0f;
         
         gss.saveConfiguration(null);
-        gss.readAll();
         gss.write(sge);
-
+        sge = gss.read("2");
+        //if(sge!=null)
+        //    System.out.println(sge.testSerialNumber);
+        //else
+        //    System.out.println("null");
+        Iterator<StudentGradesEntry> it = gss.readAll().iterator();
+        //while(it.hasNext()){
+            sge = it.next();
+            //System.out.println(sge.testSerialNumber);
+        //}
     }    
 }

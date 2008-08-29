@@ -1,5 +1,9 @@
+<<<<<<< HEAD:storage/build.xml
 <project name="tigus" default="build">
+=======
+>>>>>>> storage component update (write/read):storage/build.xml
 
+<<<<<<< HEAD:storage/build.xml
     <path id="common.classpath">
         <pathelement location="../common/bin" />
         <pathelement location="../common/lib/xstream-1.3.jar" />
@@ -70,3 +74,56 @@
     </target>
 
 </project>
+=======
+	<project name="Tigus Project" default="build" basedir=".">
+		
+		<description>
+			simple build file for google spreadsheets test example
+		</description>
+		<property name="src" location="src"/>
+		<property name="build" location="build"/>
+		<property name="package.dir" location="/home/alex/bin/gdata-src.java-1.20.0.java/gdata/java/lib"/>
+		<property name="samplepackage.dir" location="/home/alex/bin/gdata-samples.java-1.20.0.java/gdata/java/lib"/>
+			  
+			  <path id="project.class.path">
+				  <fileset dir="${package.dir}">
+					  <include name="**/*.jar"/>
+				  </fileset> 
+				  <fileset dir="${samplepackage.dir}">
+					  <include name="**/*.jar"/>
+				  </fileset>
+				  <pathelement location="${build}"/>
+			  </path>
+			  
+			  
+			  <target name="init">
+				  <tstamp/>
+				  <mkdir dir="${build}"/>
+			  </target>
+			  
+			  
+			  <target name="build" depends="init"
+				  description="compile the source " >
+				  <!-- Compile the java code from ${src} into ${build} -->
+				  <javac srcdir="${src}" destdir="${build}">
+					  <classpath refid="project.class.path"/>
+				  </javac>
+			  </target>
+			  
+			  
+			  <target name="run" depends="build"
+				  description="runs the source " >
+				  <java classname="GSpreadsheetsStorage" >
+					  <classpath refid="project.class.path"/>
+				  </java>
+			  </target>
+			  
+			  
+			  <target name="clean"
+				  description="clean up" >
+				  <!-- Delete the ${build} directory tree -->
+				  <delete dir="${build}"/>
+			  </target>
+			  
+	</project>
+>>>>>>> storage component update (write/read):storage/build.xml
