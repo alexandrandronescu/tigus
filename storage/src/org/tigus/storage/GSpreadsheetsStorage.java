@@ -7,13 +7,12 @@ import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
 import com.google.gdata.data.spreadsheet.WorksheetEntry;
 import com.google.gdata.data.spreadsheet.ListFeed;
 import com.google.gdata.data.spreadsheet.ListEntry;
-import com.google.gdata.util.ServiceException;
 
 import org.w3c.dom.Node;
-
 import java.lang.Integer;
 import java.util.*;
 import java.net.URL;
+import java.util.concurrent.*;
 
 /**
  * Class for the Google Spreadsheets storage component
@@ -27,10 +26,26 @@ public class GSpreadsheetsStorage {
     private String username;
     private String password;
     
+    private LinkedBlockingQueue<StudentGradesEntry> workpool;
+    
+    Worker worker;
+    
     /**
      * @constructor
      */
     public GSpreadsheetsStorage(){
+        workpool = new LinkedBlockingQueue<StudentGradesEntry>();
+        worker = new Worker();
+        worker.setWorkpool(this.workpool);
+        worker.start();
+    }
+    
+    public void end(){
+        worker.setStop();
+        try {
+            worker.join();
+        }
+        catch(Exception e){}
     }
     
     /**
@@ -98,6 +113,7 @@ public class GSpreadsheetsStorage {
     public boolean loadConfiguration(Node xmlConfigurationNode){
         this.username = new String("storage.tigus.project");
         this.password = new String("tigusPROJECT2008");
+        worker.setUsernamePassword(this.username, this.password);
         return true;
     }
 
@@ -116,6 +132,7 @@ public class GSpreadsheetsStorage {
     public boolean saveConfiguration(Node xmlConfigurationNode){
         this.username = new String("storage.tigus.project");
         this.password = new String("tigusPROJECT2008");
+        worker.setUsernamePassword(this.username, this.password);
         return true;
     }
 
@@ -136,60 +153,9 @@ public class GSpreadsheetsStorage {
      */
     public void write(StudentGradesEntry entry){
         try{
-            SpreadsheetService service = new SpreadsheetService("Tigus Project Storage");
-            service.setUserCredentials(this.username, this.password);
-            
-            URL metafeedUrl = new URL("http://spreadsheets.google.com/feeds/spreadsheets/private/full");
-            SpreadsheetFeed feed = service.getFeed(metafeedUrl, SpreadsheetFeed.class);
-            List<SpreadsheetEntry> spreadsheets = feed.getEntries();
-            for (int i = 0; i < spreadsheets.size(); i++) {
-                SpreadsheetEntry en = spreadsheets.get(i);
-              
-                List<WorksheetEntry> worksheets = en.getWorksheets();
-                for (int j = 0; j < worksheets.size(); j++) {
-                    WorksheetEntry worksheet = worksheets.get(j);
-                    //String title = worksheet.getTitle().getPlainText();
-                    URL listFeedUrl = worksheet.getListFeedUrl();
-                    service.getFeed(listFeedUrl, ListFeed.class);
-                    ListEntry newEntry = new ListEntry();
-                    /*
-                    String nameValuePairs = new String("EntryID=4,TestID=456789,Grupa=334CA,Nume=Ene Andreea,PunctajTotal=45,Punctaj1=5,Punctaj2=10,Punctaj3=10,Punctaj4=10,Punctaj5=10");
-                    for (String nameValuePair : nameValuePairs.split(",")) {
-                      String[] parts = nameValuePair.split("=", 2);
-                      String tag = parts[0]; 
-                      String value = parts[1]; 
-                      newEntry.getCustomElements().setValueLocal(tag, value);
-                    }*/
-
-                    newEntry.getCustomElements().setValueLocal("EntryID", entry.id);
-                    newEntry.getCustomElements().setValueLocal("TestID", entry.testSerialNumber);
-                    newEntry.getCustomElements().setValueLocal("Grupa", entry.studentGroup);
-                    newEntry.getCustomElements().setValueLocal("Nume", entry.studentName);
-                    newEntry.getCustomElements().setValueLocal("PunctajTotal", entry.total+"");
-                    
-                    Iterator<Integer> it = entry.mapQuestionPosition.keySet().iterator();
-                    while(it.hasNext()){
-                        Integer key = (Integer)it.next();
-                        switch(entry.mapQuestionPosition.get(key)){
-                            case 1: newEntry.getCustomElements().setValueLocal("Punctaj1", entry.mapQuestionGrade.get(key)+""); break;
-                            case 2: newEntry.getCustomElements().setValueLocal("Punctaj2", entry.mapQuestionGrade.get(key)+""); break;
-                            case 3: newEntry.getCustomElements().setValueLocal("Punctaj3", entry.mapQuestionGrade.get(key)+""); break;
-                            case 4: newEntry.getCustomElements().setValueLocal("Punctaj4", entry.mapQuestionGrade.get(key)+""); break;
-                            case 5: newEntry.getCustomElements().setValueLocal("Punctaj5", entry.mapQuestionGrade.get(key)+""); break;
-                        }
-                    }
-                    try{
-                        service.insert(listFeedUrl, newEntry);            
-                    }
-                    catch (ServiceException se){
-                        se.printStackTrace();
-                    }
-                }
-            }
-        }      
-        catch(Exception e){
-            e.printStackTrace();
+            workpool.put(entry);
         }
+        catch(Exception e){}
     }
 
     /**
@@ -363,7 +329,7 @@ public class GSpreadsheetsStorage {
      */
     public void closeConfigurationPanel(javax.swing.JPanel parentPanel){
     }
-
+   
     public static void main(String[] args) {
         GSpreadsheetsStorage gss = new GSpreadsheetsStorage();
         
@@ -400,14 +366,17 @@ public class GSpreadsheetsStorage {
         gss.saveConfiguration(null);
         gss.write(sge);
         sge = gss.read("2");
-        //if(sge!=null)
-        //    System.out.println(sge.testSerialNumber);
-        //else
-        //    System.out.println("null");
+        /*
+        if(sge!=null)
+            System.out.println(sge.testSerialNumber);
+        else
+            System.out.println("null");
+        */
         Iterator<StudentGradesEntry> it = gss.readAll().iterator();
-        //while(it.hasNext()){
+        while(it.hasNext()){
             sge = it.next();
             //System.out.println(sge.testSerialNumber);
-        //}
+        }
+        gss.end();
     }    
 }

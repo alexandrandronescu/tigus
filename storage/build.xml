@@ -1,80 +1,5 @@
-<<<<<<< HEAD:storage/build.xml
-<project name="tigus" default="build">
-=======
->>>>>>> storage component update (write/read):storage/build.xml
 
-<<<<<<< HEAD:storage/build.xml
-    <path id="common.classpath">
-        <pathelement location="../common/bin" />
-        <pathelement location="../common/lib/xstream-1.3.jar" />
-        <pathelement location="lib/gdata-client-1.0.jar"/>
-        <pathelement location="lib/gdata-client-meta-1.0.jar"/>
-        <pathelement location="lib/gdata-core-1.0.jar"/>
-        <pathelement location="lib/gdata-spreadsheet-1.0.jar"/>
-        <pathelement location="lib/gdata-spreadsheet-meta-1.0.jar"/>
-    </path>
 
-    <!-- lib/gdata-*.jar -->
-
-    <property name="ver-gdata" value="1.20.0" />
-
-    <target name="check-lib-gdata">
-        <condition property="lib-gdata-available">
-            <and>
-                <available file="lib/gdata-client-1.0.jar"/>
-                <available file="lib/gdata-client-meta-1.0.jar"/>
-                <available file="lib/gdata-core-1.0.jar"/>
-                <available file="lib/gdata-spreadsheet-1.0.jar"/>
-                <available file="lib/gdata-spreadsheet-meta-1.0.jar"/>
-            </and>
-        </condition>
-    </target>
-
-    <target name="get-lib-gdata" depends="check-lib-gdata" unless="lib-gdata-available">
-        <echo message="GData jars are not available. Downloading...." />
-        <mkdir dir="lib" />
-        <get src="http://gdata-java-client.googlecode.com/files/gdata-src.java-${ver-gdata}.java.zip" dest="lib/gdata-src.java-${ver-gdata}.java.zip" verbose="true" />
-        <unzip src="lib/gdata-src.java-${ver-gdata}.java.zip" dest="lib/">
-            <patternset>
-                <include name="gdata/java/lib/gdata-client-1.0.jar"/>
-                <include name="gdata/java/lib/gdata-client-meta-1.0.jar"/>
-                <include name="gdata/java/lib/gdata-core-1.0.jar"/>
-                <include name="gdata/java/lib/gdata-spreadsheet-1.0.jar"/>
-                <include name="gdata/java/lib/gdata-spreadsheet-meta-1.0.jar"/>
-            </patternset>
-        </unzip>
-        <move todir="lib/">
-            <fileset dir="lib/gdata/java/lib/">
-                <include name="**/*"/>
-            </fileset>
-        </move>
-        <delete dir="lib/gdata" />
-        <delete file="gdata-src.java-${ver-gdata}.java.zip"></delete>
-    </target>
-
-    <!-- end lib/gdata-*.jar -->
-
-    <property name="src" value="src"/>
-    <property name="bin" value="bin"/>
-
-    <target name="init">
-        <mkdir dir="${bin}"/>
-    </target>
-
-    <target name="build" depends="init, get-lib-gdata">
-        <javac srcdir="${src}" destdir="${bin}">
-            <classpath refid="common.classpath" />
-        </javac>
-    </target>
-
-    <target name="clean" description="clean folder">
-        <delete verbose="true">
-            <fileset dir="${bin}"/>
-        </delete>
-    </target>
-
-</project>
-=======
 	<project name="Tigus Project" default="build" basedir=".">
 		
 		<description>
@@ -82,17 +7,14 @@
 		</description>
 		<property name="src" location="src"/>
 		<property name="build" location="build"/>
-		<property name="package.dir" location="/home/alex/bin/gdata-src.java-1.20.0.java/gdata/java/lib"/>
-		<property name="samplepackage.dir" location="/home/alex/bin/gdata-samples.java-1.20.0.java/gdata/java/lib"/>
+		<property name="package.dir" location="lib"/>
 			  
 			  <path id="project.class.path">
 				  <fileset dir="${package.dir}">
 					  <include name="**/*.jar"/>
 				  </fileset> 
-				  <fileset dir="${samplepackage.dir}">
-					  <include name="**/*.jar"/>
-				  </fileset>
 				  <pathelement location="${build}"/>
+				  <pathelement location="../common/bin" />	  	
 			  </path>
 			  
 			  
@@ -113,7 +35,7 @@
 			  
 			  <target name="run" depends="build"
 				  description="runs the source " >
-				  <java classname="GSpreadsheetsStorage" >
+				  <java classname="CalendarTest" >
 					  <classpath refid="project.class.path"/>
 				  </java>
 			  </target>
@@ -126,4 +48,3 @@
 			  </target>
 			  
 	</project>
->>>>>>> storage component update (write/read):storage/build.xml
